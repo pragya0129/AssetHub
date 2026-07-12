@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/api";
+import { useAuth } from "../context/AuthContext";
 
 interface MaintenanceRequest {
   id: number;
@@ -8,6 +9,9 @@ interface MaintenanceRequest {
   issue_description: string;
   priority: string;
   status: string;
+  requested_by_name?: string;
+  technician_name?: string;
+  resolution_notes?: string;
   created_at: string;
 }
 
@@ -17,6 +21,11 @@ interface AllocatedAsset {
   asset_tag: string;
   name: string;
   category_name: string;
+}
+
+interface StatusData {
+  technicianName?: string;
+  resolutionNotes?: string;
 }
 
 const getStatusBadge = (status: string) => {
@@ -56,8 +65,11 @@ const getPriorityBadge = (priority: string) => {
 const Maintenance = () => {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [assets, setAssets] = useState<AllocatedAsset[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
+
   const [showForm, setShowForm] = useState(false);
 
   const [error, setError] = useState("");
@@ -69,20 +81,43 @@ const Maintenance = () => {
     priority: "MEDIUM",
   });
 
+  const { user } = useAuth();
+
+  const isManager =
+    user?.role === "ASSET_MANAGER" ||
+    user?.role === "ADMIN";
+
   const loadData = async () => {
     try {
       setLoading(true);
+      setError("");
 
-      const [maintenanceResponse, assetsResponse] = await Promise.all([
-        api.get("/maintenance/my-requests"),
-        api.get("/allocations/my-assets"),
-      ]);
+      if (isManager) {
+        const response = await api.get("/maintenance");
 
-      setRequests(maintenanceResponse.data.data || []);
-      setAssets(assetsResponse.data.data || []);
-    } catch (error) {
+        setRequests(response.data.data || []);
+      } else {
+        const [maintenanceResponse, assetsResponse] =
+          await Promise.all([
+            api.get("/maintenance/my-requests"),
+            api.get("/allocations/my-assets"),
+          ]);
+
+        setRequests(
+          maintenanceResponse.data.data || []
+        );
+
+        setAssets(
+          assetsResponse.data.data || []
+        );
+      }
+    } catch (error: any) {
       console.error(error);
-      setError("Unable to load maintenance data");
+
+      setError(
+        error.response?.data?.message ||
+        "Unable to load maintenance data"
+      );
     } finally {
       setLoading(false);
     }
@@ -92,14 +127,22 @@ const Maintenance = () => {
     loadData();
   }, []);
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (
+    event: React.FormEvent
+  ) => {
     event.preventDefault();
 
     setError("");
     setSuccess("");
 
-    if (!form.assetId || !form.issueDescription.trim()) {
-      setError("Select an asset and describe the issue");
+    if (
+      !form.assetId ||
+      !form.issueDescription.trim()
+    ) {
+      setError(
+        "Select an asset and describe the issue"
+      );
+
       return;
     }
 
@@ -108,11 +151,14 @@ const Maintenance = () => {
 
       await api.post("/maintenance", {
         assetId: Number(form.assetId),
-        issueDescription: form.issueDescription.trim(),
+        issueDescription:
+          form.issueDescription.trim(),
         priority: form.priority,
       });
 
-      setSuccess("Maintenance request submitted successfully");
+      setSuccess(
+        "Maintenance request submitted successfully"
+      );
 
       setForm({
         assetId: "",
@@ -121,6 +167,7 @@ const Maintenance = () => {
       });
 
       setShowForm(false);
+
       await loadData();
     } catch (error: any) {
       console.error(error);
@@ -131,6 +178,183 @@ const Maintenance = () => {
       );
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const updateStatus = async (
+    requestId: number,
+    status: string,
+    additionalData: StatusData = {}
+  ) => {
+    try {
+      setUpdatingId(requestId);
+      setError("");
+      setSuccess("");
+
+      await api.patch(
+        `/maintenance/${requestId}/status`,
+        {
+          status,
+          ...additionalData,
+        }
+      );
+
+      setSuccess(
+        `Maintenance request updated to ${status
+          .replaceAll("_", " ")
+          .toLowerCase()}`
+      );
+
+      await loadData();
+    } catch (error: any) {
+      console.error(error);
+
+      setError(
+        error.response?.data?.message ||
+        "Unable to update maintenance request"
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const renderManagerActions = (
+    request: MaintenanceRequest
+  ) => {
+    const isUpdating =
+      updatingId === request.id;
+
+    switch (request.status) {
+      case "PENDING":
+        return (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={isUpdating}
+              onClick={() =>
+                updateStatus(
+                  request.id,
+                  "APPROVED"
+                )
+              }
+              className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isUpdating
+                ? "Updating..."
+                : "Approve"}
+            </button>
+
+            <button
+              type="button"
+              disabled={isUpdating}
+              onClick={() =>
+                updateStatus(
+                  request.id,
+                  "REJECTED"
+                )
+              }
+              className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Reject
+            </button>
+          </div>
+        );
+
+      case "APPROVED":
+        return (
+          <button
+            type="button"
+            disabled={isUpdating}
+            onClick={() => {
+              const technicianName =
+                window.prompt(
+                  "Enter technician name"
+                );
+
+              if (technicianName?.trim()) {
+                updateStatus(
+                  request.id,
+                  "TECHNICIAN_ASSIGNED",
+                  {
+                    technicianName:
+                      technicianName.trim(),
+                  }
+                );
+              }
+            }}
+            className="rounded-lg bg-purple-600 px-3 py-2 text-xs font-semibold text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isUpdating
+              ? "Updating..."
+              : "Assign Technician"}
+          </button>
+        );
+
+      case "TECHNICIAN_ASSIGNED":
+        return (
+          <button
+            type="button"
+            disabled={isUpdating}
+            onClick={() =>
+              updateStatus(
+                request.id,
+                "IN_PROGRESS"
+              )
+            }
+            className="rounded-lg bg-orange-600 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isUpdating
+              ? "Updating..."
+              : "Start Work"}
+          </button>
+        );
+
+      case "IN_PROGRESS":
+        return (
+          <button
+            type="button"
+            disabled={isUpdating}
+            onClick={() => {
+              const resolutionNotes =
+                window.prompt(
+                  "Enter resolution notes"
+                );
+
+              if (resolutionNotes?.trim()) {
+                updateStatus(
+                  request.id,
+                  "RESOLVED",
+                  {
+                    resolutionNotes:
+                      resolutionNotes.trim(),
+                  }
+                );
+              }
+            }}
+            className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isUpdating
+              ? "Updating..."
+              : "Resolve"}
+          </button>
+        );
+
+      case "RESOLVED":
+        return (
+          <span className="text-sm font-semibold text-green-600">
+            Completed
+          </span>
+        );
+
+      case "REJECTED":
+        return (
+          <span className="text-sm font-semibold text-red-600">
+            Rejected
+          </span>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -159,20 +383,25 @@ const Maintenance = () => {
           </h1>
 
           <p className="mt-2 text-slate-500">
-            Report and track issues with your assigned assets
+            {isManager
+              ? "Review and manage employee maintenance requests"
+              : "Report and track issues with your assigned assets"}
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            setShowForm(true);
-            setError("");
-            setSuccess("");
-          }}
-          className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
-        >
-          + Raise Request
-        </button>
+        {!isManager && (
+          <button
+            type="button"
+            onClick={() => {
+              setShowForm(true);
+              setError("");
+              setSuccess("");
+            }}
+            className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+          >
+            + Raise Request
+          </button>
+        )}
       </div>
 
       {/* Messages */}
@@ -189,9 +418,9 @@ const Maintenance = () => {
         </div>
       )}
 
-      {/* Maintenance form */}
+      {/* Employee maintenance form */}
 
-      {showForm && (
+      {showForm && !isManager && (
         <div className="mb-8 rounded-3xl border bg-white p-7 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
             <div>
@@ -200,13 +429,16 @@ const Maintenance = () => {
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Report an issue with one of your assigned assets
+                Report an issue with one of your
+                assigned assets
               </p>
             </div>
 
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={() =>
+                setShowForm(false)
+              }
               className="text-2xl text-slate-400 hover:text-slate-700"
             >
               ×
@@ -225,7 +457,8 @@ const Maintenance = () => {
                   onChange={(event) =>
                     setForm({
                       ...form,
-                      assetId: event.target.value,
+                      assetId:
+                        event.target.value,
                     })
                   }
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-500"
@@ -239,14 +472,16 @@ const Maintenance = () => {
                       key={asset.asset_id}
                       value={asset.asset_id}
                     >
-                      {asset.name} — {asset.asset_tag}
+                      {asset.name} —{" "}
+                      {asset.asset_tag}
                     </option>
                   ))}
                 </select>
 
                 {assets.length === 0 && (
                   <p className="mt-2 text-sm text-orange-600">
-                    You currently have no allocated assets.
+                    You currently have no
+                    allocated assets.
                   </p>
                 )}
               </div>
@@ -261,15 +496,27 @@ const Maintenance = () => {
                   onChange={(event) =>
                     setForm({
                       ...form,
-                      priority: event.target.value,
+                      priority:
+                        event.target.value,
                     })
                   }
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-500"
                 >
-                  <option value="LOW">Low</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="HIGH">High</option>
-                  <option value="CRITICAL">Critical</option>
+                  <option value="LOW">
+                    Low
+                  </option>
+
+                  <option value="MEDIUM">
+                    Medium
+                  </option>
+
+                  <option value="HIGH">
+                    High
+                  </option>
+
+                  <option value="CRITICAL">
+                    Critical
+                  </option>
                 </select>
               </div>
             </div>
@@ -281,11 +528,14 @@ const Maintenance = () => {
 
               <textarea
                 rows={4}
-                value={form.issueDescription}
+                value={
+                  form.issueDescription
+                }
                 onChange={(event) =>
                   setForm({
                     ...form,
-                    issueDescription: event.target.value,
+                    issueDescription:
+                      event.target.value,
                   })
                 }
                 placeholder="Example: Laptop overheats and shuts down after twenty minutes"
@@ -296,7 +546,9 @@ const Maintenance = () => {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
+                onClick={() =>
+                  setShowForm(false)
+                }
                 className="rounded-xl border px-5 py-3 font-semibold text-slate-600 hover:bg-slate-50"
               >
                 Cancel
@@ -304,10 +556,15 @@ const Maintenance = () => {
 
               <button
                 type="submit"
-                disabled={submitting || assets.length === 0}
+                disabled={
+                  submitting ||
+                  assets.length === 0
+                }
                 className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? "Submitting..." : "Submit Request"}
+                {submitting
+                  ? "Submitting..."
+                  : "Submit Request"}
               </button>
             </div>
           </form>
@@ -316,7 +573,7 @@ const Maintenance = () => {
 
       {/* Maintenance table */}
 
-      <div className="overflow-hidden rounded-3xl border bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-3xl border bg-white shadow-sm">
         <table className="min-w-full">
           <thead className="bg-slate-50">
             <tr>
@@ -332,6 +589,12 @@ const Maintenance = () => {
                 Priority
               </th>
 
+              {isManager && (
+                <th className="px-6 py-4 text-left">
+                  Requested By
+                </th>
+              )}
+
               <th className="px-6 py-4 text-left">
                 Status
               </th>
@@ -339,6 +602,12 @@ const Maintenance = () => {
               <th className="px-6 py-4 text-left">
                 Submitted
               </th>
+
+              {isManager && (
+                <th className="px-6 py-4 text-left">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
 
@@ -346,10 +615,14 @@ const Maintenance = () => {
             {requests.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={
+                    isManager ? 7 : 5
+                  }
                   className="py-14 text-center text-slate-500"
                 >
-                  No maintenance requests yet
+                  {isManager
+                    ? "No employee maintenance requests"
+                    : "No maintenance requests yet"}
                 </td>
               </tr>
             ) : (
@@ -382,19 +655,39 @@ const Maintenance = () => {
                     </span>
                   </td>
 
+                  {isManager && (
+                    <td className="px-6 py-5">
+                      {item.requested_by_name ||
+                        "Unknown"}
+                    </td>
+                  )}
+
                   <td className="px-6 py-5">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadge(
+                      className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadge(
                         item.status
                       )}`}
                     >
-                      {item.status.replaceAll("_", " ")}
+                      {item.status.replaceAll(
+                        "_",
+                        " "
+                      )}
                     </span>
                   </td>
 
-                  <td className="px-6 py-5 text-sm text-slate-500">
-                    {new Date(item.created_at).toLocaleDateString()}
+                  <td className="whitespace-nowrap px-6 py-5 text-sm text-slate-500">
+                    {new Date(
+                      item.created_at
+                    ).toLocaleDateString()}
                   </td>
+
+                  {isManager && (
+                    <td className="whitespace-nowrap px-6 py-5">
+                      {renderManagerActions(
+                        item
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))
             )}
