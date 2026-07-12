@@ -20,6 +20,11 @@ import {
   useAuth,
 } from "./context/AuthContext";
 
+import DashboardLayout from "./components/layout/DashboardLayout";
+import Assets from "./pages/Assets";
+import Allocations from "./pages/Allocations";
+import MyAssets from "./pages/MyAssets";
+import Maintenance from "./pages/Maintenance";
 
 const App = () => {
 
@@ -72,21 +77,38 @@ const App = () => {
       />
 
 
-      <Route
-        element={
-          <ProtectedRoute />
-        }
-      >
+     <Route element={<ProtectedRoute />}>
+
+    <Route element={<DashboardLayout />}>
 
         <Route
-          path="/dashboard"
-
-          element={
-            <Dashboard />
-          }
+            path="/dashboard"
+            element={<Dashboard />}
         />
 
-      </Route>
+        <Route
+            path="/assets"
+            element={<Assets />}
+        />
+
+        <Route
+            path="/allocations"
+            element={<Allocations />}
+        />
+
+        <Route
+            path="/my-assets"
+            element={<MyAssets />}
+        />
+
+        <Route
+            path="/maintenance"
+            element={<Maintenance />}
+        />
+
+    </Route>
+
+</Route>
 
 
       <Route

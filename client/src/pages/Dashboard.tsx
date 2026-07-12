@@ -1,106 +1,117 @@
-import {
-  useAuth,
-} from "../context/AuthContext";
+import { useEffect, useState } from "react";
+import api from "../api/api";
 
+import KPIGrid from "../components/dashboard/KPIGrid";
+import QuickActions from "../components/dashboard/QuickAction";
+import AssetStatusChart from "../components/dashboard/AssetStatusChart";
+import RecentAssets from "../components/dashboard/RecentAssets";
+import RecentActivity from "../components/dashboard/RecentActivity";
+
+interface DashboardData {
+  kpis: {
+    totalAssets: number;
+    availableAssets: number;
+    allocatedAssets: number;
+    underMaintenance: number;
+    lostAssets: number;
+  };
+
+  recentAssets: any[];
+}
 
 const Dashboard = () => {
+  const [dashboard, setDashboard] =
+    useState<DashboardData | null>(null);
 
-  const {
-    user,
+  const [loading, setLoading] =
+    useState(true);
 
-    logout,
-  } = useAuth();
+  const loadDashboard = async () => {
+    try {
+      const res = await api.get("/dashboard");
 
+      setDashboard(res.data.data);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  return (
-    <main
-      className="
-        flex
-        min-h-screen
-        items-center
-        justify-center
-        bg-slate-100
-        p-6
-      "
-    >
+  useEffect(() => {
+    loadDashboard();
+  }, []);
 
-      <div
-        className="
-          w-full
-          max-w-xl
-          rounded-3xl
-          bg-white
-          p-10
-          shadow-sm
-        "
-      >
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
 
-        <p
-          className="
-            font-semibold
-            text-blue-600
-          "
-        >
-          AssetFlow
-        </p>
+          <p className="mt-4 text-slate-500">
+            Loading dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-
-        <h1
-          className="
-            mt-3
-            text-4xl
-            font-bold
-            text-slate-950
-          "
-        >
-          Welcome,
-          {" "}
-          {
-            user?.name
-          }
-        </h1>
-
-
-        <p
-          className="
-            mt-4
-            text-slate-500
-          "
-        >
-          Your role:
-          {" "}
-
-          <strong>
-            {
-              user?.role
-            }
-          </strong>
-        </p>
-
+  if (!dashboard) {
+    return (
+      <div className="rounded-3xl bg-white p-12 text-center shadow-sm">
+        <h2 className="text-2xl font-bold">
+          Unable to load dashboard
+        </h2>
 
         <button
-          onClick={
-            logout
-          }
-
-          className="
-            mt-8
-            rounded-xl
-            bg-slate-900
-            px-5
-            py-3
-            font-semibold
-            text-white
-          "
+          onClick={loadDashboard}
+          className="mt-6 rounded-xl bg-blue-600 px-6 py-3 text-white"
         >
-          Log out
+          Retry
         </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+
+      {/* KPI Cards */}
+
+      <KPIGrid
+        data={dashboard.kpis}
+      />
+
+      {/* Charts */}
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+
+        <div className="xl:col-span-2">
+
+          <AssetStatusChart
+            data={dashboard.kpis}
+          />
+
+        </div>
+
+        <QuickActions />
 
       </div>
 
-    </main>
+      {/* Bottom */}
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+
+        <RecentAssets
+          assets={dashboard.recentAssets}
+        />
+
+        <RecentActivity />
+
+      </div>
+
+    </div>
   );
 };
-
 
 export default Dashboard;
