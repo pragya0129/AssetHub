@@ -65,13 +65,10 @@ const getPriorityBadge = (priority: string) => {
 const Maintenance = () => {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [assets, setAssets] = useState<AllocatedAsset[]>([]);
-
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
-
   const [showForm, setShowForm] = useState(false);
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -94,7 +91,6 @@ const Maintenance = () => {
 
       if (isManager) {
         const response = await api.get("/maintenance");
-
         setRequests(response.data.data || []);
       } else {
         const [maintenanceResponse, assetsResponse] =
@@ -227,7 +223,7 @@ const Maintenance = () => {
     switch (request.status) {
       case "PENDING":
         return (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               disabled={isUpdating}
@@ -373,16 +369,14 @@ const Maintenance = () => {
   }
 
   return (
-    <>
-      {/* Header */}
-
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">
+    <div className="w-full min-w-0">
+      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold sm:text-3xl">
             Maintenance
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="mt-1 text-sm leading-6 text-slate-500 sm:mt-2 sm:text-base">
             {isManager
               ? "Review and manage employee maintenance requests"
               : "Report and track issues with your assigned assets"}
@@ -397,34 +391,30 @@ const Maintenance = () => {
               setError("");
               setSuccess("");
             }}
-            className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+            className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
           >
             + Raise Request
           </button>
         )}
       </div>
 
-      {/* Messages */}
-
       {success && (
-        <div className="mb-5 rounded-xl border border-green-200 bg-green-50 px-5 py-4 text-green-700">
+        <div className="mb-5 break-words rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 sm:px-5 sm:py-4 sm:text-base">
           {success}
         </div>
       )}
 
       {error && (
-        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-red-700">
+        <div className="mb-5 break-words rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:px-5 sm:py-4 sm:text-base">
           {error}
         </div>
       )}
 
-      {/* Employee maintenance form */}
-
       {showForm && !isManager && (
-        <div className="mb-8 rounded-3xl border bg-white p-7 shadow-sm">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 rounded-2xl border bg-white p-4 shadow-sm sm:mb-8 sm:rounded-3xl sm:p-7">
+          <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold">
+              <h2 className="text-lg font-bold sm:text-xl">
                 Raise Maintenance Request
               </h2>
 
@@ -439,7 +429,7 @@ const Maintenance = () => {
               onClick={() =>
                 setShowForm(false)
               }
-              className="text-2xl text-slate-400 hover:text-slate-700"
+              className="shrink-0 text-2xl text-slate-400 hover:text-slate-700"
             >
               ×
             </button>
@@ -543,13 +533,13 @@ const Maintenance = () => {
               />
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() =>
                   setShowForm(false)
                 }
-                className="rounded-xl border px-5 py-3 font-semibold text-slate-600 hover:bg-slate-50"
+                className="w-full rounded-xl border px-5 py-3 font-semibold text-slate-600 hover:bg-slate-50 sm:w-auto"
               >
                 Cancel
               </button>
@@ -560,7 +550,7 @@ const Maintenance = () => {
                   submitting ||
                   assets.length === 0
                 }
-                className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 {submitting
                   ? "Submitting..."
@@ -571,9 +561,94 @@ const Maintenance = () => {
         </div>
       )}
 
-      {/* Maintenance table */}
+      <div className="space-y-4 md:hidden">
+        {requests.length === 0 ? (
+          <div className="rounded-2xl border bg-white px-5 py-12 text-center text-slate-500 shadow-sm">
+            {isManager
+              ? "No employee maintenance requests"
+              : "No maintenance requests yet"}
+          </div>
+        ) : (
+          requests.map((item) => (
+            <div
+              key={item.id}
+              className="rounded-2xl border bg-white p-5 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="break-words font-bold text-slate-900">
+                    {item.asset_name}
+                  </h3>
 
-      <div className="overflow-x-auto rounded-3xl border bg-white shadow-sm">
+                  <p className="mt-1 text-sm text-slate-500">
+                    {item.asset_tag}
+                  </p>
+                </div>
+
+                <span
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${getPriorityBadge(
+                    item.priority
+                  )}`}
+                >
+                  {item.priority}
+                </span>
+              </div>
+
+              <div className="mt-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Issue
+                </p>
+
+                <p className="mt-1 break-words text-sm leading-6 text-slate-700">
+                  {item.issue_description}
+                </p>
+              </div>
+
+              {isManager && (
+                <div className="mt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Requested By
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-700">
+                    {item.requested_by_name ||
+                      "Unknown"}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadge(
+                    item.status
+                  )}`}
+                >
+                  {item.status.replaceAll(
+                    "_",
+                    " "
+                  )}
+                </span>
+
+                <span className="text-xs text-slate-500">
+                  {new Date(
+                    item.created_at
+                  ).toLocaleDateString()}
+                </span>
+              </div>
+
+              {isManager && (
+                <div className="mt-4 border-t pt-4">
+                  {renderManagerActions(
+                    item
+                  )}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-3xl border bg-white shadow-sm md:block">
         <table className="min-w-full">
           <thead className="bg-slate-50">
             <tr>
@@ -694,7 +769,7 @@ const Maintenance = () => {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 };
 
