@@ -8,7 +8,7 @@ import authRoutes from "./routes/authRoutes.js";
 import assetRoutes from "./routes/assetRoutes.js";
 import allocationRoutes from "./routes/allocationRoutes.js";
 import maintenanceRoutes from "./routes/maintenanceRoutes.js";
-
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -55,6 +55,11 @@ app.use(
 app.use(
     "/api/maintenance",
     maintenanceRoutes,
+);
+
+app.use(
+    "/api/dashboard",
+    dashboardRoutes,
 );
 
 app.get("/", (_req, res) => {
