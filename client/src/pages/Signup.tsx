@@ -460,9 +460,7 @@ const Signup = () => {
             >
 
               <select
-                name="
-                  departmentId
-                "
+                name="departmentId"
 
                 value={
                   form.departmentId
