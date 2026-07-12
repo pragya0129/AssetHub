@@ -25,6 +25,7 @@ import Assets from "./pages/Assets";
 import Allocations from "./pages/Allocations";
 import MyAssets from "./pages/MyAssets";
 import Maintenance from "./pages/Maintenance";
+import Bookings from "./pages/Bookings";
 
 const App = () => {
 
@@ -84,44 +85,49 @@ const App = () => {
 
       <Route element={<ProtectedRoute />}>
 
-        <Route element={<DashboardLayout />}>
+  <Route element={<DashboardLayout />}>
 
-          <Route
-            path="/dashboard"
-            element={<Dashboard />}
-          />
+    <Route
+      path="/dashboard"
+      element={<Dashboard />}
+    />
 
-          <Route
-            path="/assets"
-            element={
-              isAdmin
-                ? <Assets />
-                : <Navigate to="/dashboard" replace />
-            }
-          />
+    <Route
+      path="/assets"
+      element={
+        isAdmin
+          ? <Assets />
+          : <Navigate to="/dashboard" replace />
+      }
+    />
 
-          <Route
-            path="/allocations"
-            element={
-              isAdmin
-                ? <Allocations />
-                : <Navigate to="/dashboard" replace />
-            }
-          />
+    <Route
+      path="/allocations"
+      element={
+        isAdmin
+          ? <Allocations />
+          : <Navigate to="/dashboard" replace />
+      }
+    />
 
-          <Route
-            path="/my-assets"
-            element={<MyAssets />}
-          />
+    <Route
+      path="/my-assets"
+      element={<MyAssets />}
+    />
 
-          <Route
-            path="/maintenance"
-            element={<Maintenance />}
-          />
+    <Route
+      path="/maintenance"
+      element={<Maintenance />}
+    />
 
-        </Route>
+    <Route
+      path="/bookings"
+      element={<Bookings />}
+    />
 
-      </Route>
+  </Route>
+
+</Route>
 
 
       <Route

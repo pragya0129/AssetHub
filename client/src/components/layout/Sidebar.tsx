@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Wrench,
   Boxes,
+  CalendarDays,
   LogOut,
   ChevronRight,
 } from "lucide-react";
@@ -39,6 +40,11 @@ const menus = isAdmin
         path: "/maintenance",
         icon: Wrench,
       },
+      {
+  title: "Bookings",
+  path: "/bookings",
+  icon: CalendarDays,
+},
     ]
   : [
       {
@@ -56,6 +62,11 @@ const menus = isAdmin
         path: "/maintenance",
         icon: Wrench,
       },
+      {
+  title: "Bookings",
+  path: "/bookings",
+  icon: CalendarDays,
+},
     ];
 
   return (
