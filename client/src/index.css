@@ -1,17 +1,2 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Geist", sans-serif;
-}
-
-html,
-body,
-#root {
-  width: 100%;
-  height: 100%;
-  background: #f8fafc;
-}
