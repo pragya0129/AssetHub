@@ -10,6 +10,7 @@ import allocationRoutes from "./routes/allocationRoutes.js";
 import maintenanceRoutes from "./routes/maintenanceRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 
@@ -67,6 +68,11 @@ app.use(
 app.use(
     "/api/bookings",
     bookingRoutes,
+);
+
+app.use(
+    "/api/users",
+    userRoutes,
 );
 
 app.get("/", (_req, res) => {

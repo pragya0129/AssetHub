@@ -48,10 +48,9 @@ const Sidebar = () => {
             key={menu.path}
             to={menu.path}
             className={({ isActive }) =>
-              `group flex items-center justify-between rounded-lg px-4 py-3 transition-all duration-200 ${
-                isActive
-                  ? "bg-slate-900 text-white font-medium border-l-4 border-blue-500"
-                  : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+              `group flex items-center justify-between rounded-lg px-4 py-3 transition-all duration-200 ${isActive
+                ? "bg-slate-900 text-white font-medium border-l-4 border-blue-500"
+                : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
               }`
             }
           >
@@ -76,7 +75,7 @@ const Sidebar = () => {
             <p className="text-xs text-slate-500 truncate">{user?.role}</p>
           </div>
         </div>
-        
+
         <button
           onClick={logout}
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-800 bg-slate-900 py-2.5 text-sm font-medium text-slate-300 hover:border-red-900/50 hover:text-red-400 hover:bg-red-950/20 transition-all"
