@@ -21,7 +21,10 @@ const PORT =
 
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: [
+            "http://localhost:5173",
+            "https://asset-hub-five.vercel.app",
+        ],
 
         methods: [
             "GET",
