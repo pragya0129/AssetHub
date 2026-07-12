@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import db from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
+import assetRoutes from "./routes/assetRoutes.js";
 
 dotenv.config();
 
@@ -37,6 +38,11 @@ app.use(express.json());
 app.use(
     "/api/auth",
     authRoutes,
+);
+
+app.use(
+    "/api/assets",
+    assetRoutes,
 );
 
 app.get("/", (_req, res) => {
