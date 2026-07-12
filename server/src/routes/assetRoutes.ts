@@ -1,52 +1,42 @@
 import { Router } from "express";
 
 import {
-    createAsset,
-    getAssets,
-    getAssetById,
-    updateAssetStatus,
+  createAsset,
+  getAssets,
+  getAssetById,
+  updateAssetStatus,
+  deleteAsset,
 } from "../controllers/assetController.js";
 
 import {
-    protect,
-    authorize,
+  protect,
+  authorize,
 } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
 router.use(protect);
 
-router.get(
-    "/",
-    getAssets,
-);
+router.get("/", getAssets);
 
-router.get(
-    "/:id",
-    getAssetById,
-);
+router.get("/:id", getAssetById);
 
 router.post(
-    "/",
-
-    authorize(
-        "ADMIN",
-        "ASSET_MANAGER",
-    ),
-
-    createAsset,
+  "/",
+  authorize("ADMIN", "ASSET_MANAGER"),
+  createAsset
 );
 
 router.patch(
-    "/:id/status",
-
-    authorize(
-        "ADMIN",
-        "ASSET_MANAGER",
-    ),
-
-    updateAssetStatus,
+  "/:id/status",
+  authorize("ADMIN", "ASSET_MANAGER"),
+  updateAssetStatus
 );
 
+router.delete(
+  "/:id",
+  authorize("ADMIN", "ASSET_MANAGER"),
+  deleteAsset
+);
 
 export default router;

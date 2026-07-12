@@ -507,3 +507,107 @@ export const updateAssetStatus = async (
         });
     }
 };
+
+export const deleteAsset = async (
+    req: Request,
+    res: Response,
+): Promise<void> => {
+
+    try {
+
+        const assetId = Number(req.params.id);
+
+        const [allocationRows] =
+            await db.query<RowDataPacket[]>(
+                `
+                SELECT id
+                FROM asset_allocations
+                WHERE asset_id = ?
+                AND status = 'ACTIVE'
+                `,
+                [assetId],
+            );
+
+        if (allocationRows.length > 0) {
+
+            res.status(400).json({
+                success: false,
+                message:
+                    "Cannot delete an allocated asset. Return it first.",
+            });
+
+            return;
+
+        }
+
+        const [bookingRows] =
+            await db.query<RowDataPacket[]>(
+                `
+                SELECT id
+                FROM resource_bookings
+                WHERE asset_id = ?
+                AND status IN ('UPCOMING','ONGOING')
+                `,
+                [assetId],
+            );
+
+        if (bookingRows.length > 0) {
+
+            res.status(400).json({
+                success: false,
+                message:
+                    "Cannot delete a booked resource.",
+            });
+
+            return;
+
+        }
+
+        const [result] =
+            await db.execute<ResultSetHeader>(
+                `
+                DELETE
+                FROM assets
+                WHERE id = ?
+                `,
+                [assetId],
+            );
+
+        if (result.affectedRows === 0) {
+
+            res.status(404).json({
+                success: false,
+                message: "Asset not found",
+            });
+
+            return;
+
+        }
+
+        res.status(200).json({
+
+            success: true,
+
+            message:
+                "Asset deleted successfully",
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to delete asset",
+
+        });
+
+    }
+
+};
