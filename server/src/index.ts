@@ -1,50 +1,109 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+
 import db from "./config/db.js";
+
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-const PORT = Number(process.env.PORT) || 5000;
+const PORT =
+    Number(process.env.PORT) || 5000;
 
 app.use(
     cors({
         origin: "http://localhost:5173",
+
+        methods: [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+        ],
+
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization",
+        ],
     }),
 );
 
 app.use(express.json());
 
+app.use(
+    "/api/auth",
+    authRoutes,
+);
+
 app.get("/", (_req, res) => {
-    res.json({
+    res.status(200).json({
         success: true,
-        message: "AssetFlow API is running",
+
+        message:
+            "AssetFlow API is running",
     });
 });
 
-app.get("/api/test-db", async (_req, res) => {
-    try {
-        const [rows] = await db.query(
-            "SELECT DATABASE() AS databaseName, NOW() AS currentTime",
-        );
+app.get(
+    "/api/test-db",
 
-        res.status(200).json({
-            success: true,
-            message: "MySQL database connected successfully",
-            data: rows,
-        });
-    } catch (error) {
-        console.error("Database connection failed:", error);
+    async (_req, res) => {
+        try {
+            const [rows] =
+                await db.query(
+                    `
+            SELECT
+              DATABASE() AS databaseName,
+              NOW() AS currentTime
+          `,
+                );
 
-        res.status(500).json({
+            res.status(200).json({
+                success: true,
+
+                message:
+                    "MySQL connected successfully",
+
+                data: rows,
+            });
+        } catch (error) {
+            console.error(
+                "Database error:",
+                error,
+            );
+
+            res.status(500).json({
+                success: false,
+
+                message:
+                    "MySQL connection failed",
+            });
+        }
+    },
+);
+
+
+app.use(
+    (_req, res) => {
+        res.status(404).json({
             success: false,
-            message: "Could not connect to the MySQL database",
-        });
-    }
-});
 
-app.listen(PORT, () => {
-    console.log(`AssetFlow server running on port ${PORT}`);
-});
+            message:
+                "API endpoint not found",
+        });
+    },
+);
+
+app.listen(
+    PORT,
+
+    () => {
+        console.log(
+            `AssetFlow API running at http://localhost:${PORT}`,
+        );
+    },
+);
