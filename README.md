@@ -265,29 +265,25 @@ cd AssetHub
 
 ## 2. Configure the MySQL Database
 
-Start the MySQL server and log in:
+AssetHub uses **MySQL** as its relational database. Before starting the backend server, the database and all required tables must be initialized.
 
-```bash
-mysql -u root -p
-```
+The database includes tables for:
 
-Create the local database:
+* Departments
+* Users and role-based access
+* Asset categories
+* Organizational assets
+* Asset allocations
+* Maintenance requests
+* Resource bookings
+* User notifications
+* Activity logs
 
-```sql
-CREATE DATABASE assetflow_db;
-```
+Detailed database documentation—including the complete schema, table relationships, initial seed data, role configuration, and setup instructions—is available in the dedicated database setup guide.
 
-Verify that the database was created:
+### 📘 [View Complete Database Setup Guide](db_setup.md)
 
-```sql
-SHOW DATABASES;
-```
-
-Exit MySQL:
-
-```sql
-EXIT;
-```
+> The database tables must be created before starting the backend. API requests may fail if the database schema has not been initialized.
 
 ---
 
