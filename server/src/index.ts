@@ -6,6 +6,7 @@ import db from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import assetRoutes from "./routes/assetRoutes.js";
+import allocationRoutes from "./routes/allocationRoutes.js";
 
 dotenv.config();
 
@@ -43,6 +44,12 @@ app.use(
 app.use(
     "/api/assets",
     assetRoutes,
+);
+
+app.use(
+    "/api/allocations",
+
+    allocationRoutes,
 );
 
 app.get("/", (_req, res) => {
