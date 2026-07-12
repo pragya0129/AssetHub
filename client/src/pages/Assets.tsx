@@ -114,6 +114,7 @@ const Assets = () => {
 
       <AssetTable
         assets={filteredAssets}
+        refresh={loadAssets}
       />
 
       {/* MODAL */}

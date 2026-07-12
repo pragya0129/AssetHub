@@ -1,3 +1,4 @@
+import api from "../../api/api";
 import type { Asset } from "../../types/asset";
 import {
   Eye,
@@ -7,6 +8,7 @@ import {
 
 interface Props {
   assets: Asset[];
+  refresh: () => void;
 }
 
 const getStatusColor = (status: string) => {
@@ -28,7 +30,34 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const AssetTable = ({ assets }: Props) => {
+const AssetTable = ({
+  assets,
+  refresh,
+}: Props) => {
+
+  const deleteAsset = async (id: number) => {
+
+    const confirmDelete = window.confirm(
+      "Delete this asset?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      await api.delete(`/assets/${id}`);
+
+      refresh();
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert("Unable to delete asset");
+
+    }
+
+  };
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
 
@@ -126,7 +155,10 @@ const AssetTable = ({ assets }: Props) => {
                       <Pencil size={18} />
                     </button>
 
-                    <button className="rounded-lg p-2 hover:bg-red-100 hover:text-red-600">
+                    <button
+                      onClick={() => deleteAsset(asset.id)}
+                      className="rounded-lg p-2 hover:bg-red-100 hover:text-red-600"
+                    >
                       <Trash2 size={18} />
                     </button>
 
