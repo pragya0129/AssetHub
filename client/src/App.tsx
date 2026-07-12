@@ -30,7 +30,12 @@ const App = () => {
 
   const {
     isAuthenticated,
+    user,
   } = useAuth();
+
+  const isAdmin =
+    user?.role === "ADMIN" ||
+    user?.role === "ASSET_MANAGER";
 
 
   return (
@@ -77,38 +82,46 @@ const App = () => {
       />
 
 
-     <Route element={<ProtectedRoute />}>
+      <Route element={<ProtectedRoute />}>
 
-    <Route element={<DashboardLayout />}>
+        <Route element={<DashboardLayout />}>
 
-        <Route
+          <Route
             path="/dashboard"
             element={<Dashboard />}
-        />
+          />
 
-        <Route
+          <Route
             path="/assets"
-            element={<Assets />}
-        />
+            element={
+              isAdmin
+                ? <Assets />
+                : <Navigate to="/dashboard" replace />
+            }
+          />
 
-        <Route
+          <Route
             path="/allocations"
-            element={<Allocations />}
-        />
+            element={
+              isAdmin
+                ? <Allocations />
+                : <Navigate to="/dashboard" replace />
+            }
+          />
 
-        <Route
+          <Route
             path="/my-assets"
             element={<MyAssets />}
-        />
+          />
 
-        <Route
+          <Route
             path="/maintenance"
             element={<Maintenance />}
-        />
+          />
 
-    </Route>
+        </Route>
 
-</Route>
+      </Route>
 
 
       <Route

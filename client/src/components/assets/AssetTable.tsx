@@ -9,6 +9,7 @@ import {
 interface Props {
   assets: Asset[];
   refresh: () => void;
+  isAdmin: boolean;
 }
 
 const getStatusColor = (status: string) => {
@@ -33,6 +34,7 @@ const getStatusColor = (status: string) => {
 const AssetTable = ({
   assets,
   refresh,
+  isAdmin,
 }: Props) => {
 
   const deleteAsset = async (id: number) => {
@@ -143,28 +145,40 @@ const AssetTable = ({
 
                 </td>
 
-                <td className="px-6 py-5">
+               <td className="px-6 py-5">
 
-                  <div className="flex justify-center gap-2">
+  {
+    isAdmin ? (
 
-                    <button className="rounded-lg p-2 hover:bg-slate-100">
-                      <Eye size={18} />
-                    </button>
+      <div className="flex justify-center gap-2">
 
-                    <button className="rounded-lg p-2 hover:bg-blue-100 hover:text-blue-600">
-                      <Pencil size={18} />
-                    </button>
+        <button className="rounded-lg p-2 hover:bg-slate-100">
+          <Eye size={18} />
+        </button>
 
-                    <button
-                      onClick={() => deleteAsset(asset.id)}
-                      className="rounded-lg p-2 hover:bg-red-100 hover:text-red-600"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+        <button className="rounded-lg p-2 hover:bg-blue-100 hover:text-blue-600">
+          <Pencil size={18} />
+        </button>
 
-                  </div>
+        <button
+          onClick={() => deleteAsset(asset.id)}
+          className="rounded-lg p-2 hover:bg-red-100 hover:text-red-600"
+        >
+          <Trash2 size={18} />
+        </button>
 
-                </td>
+      </div>
+
+    ) : (
+
+      <span className="text-sm text-slate-400">
+        View Only
+      </span>
+
+    )
+  }
+
+</td>
 
               </tr>
 

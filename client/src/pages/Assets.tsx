@@ -7,6 +7,7 @@ import type { Asset } from "../types/asset";
 import AssetFilters from "../components/assets/AssetFilters";
 import AssetTable from "../components/assets/AssetTable";
 import AddAssetModal from "../components/assets/AddAssetModal";
+import { useAuth } from "../context/AuthContext";
 
 const Assets = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -17,6 +18,12 @@ const Assets = () => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [category, setCategory] = useState("");
+
+  const { user } = useAuth();
+
+const isAdmin =
+  user?.role === "ADMIN" ||
+  user?.role === "ASSET_MANAGER";
 
   const loadAssets = async () => {
     try {
@@ -99,32 +106,39 @@ const Assets = () => {
       </div>
 
       {/* FILTERS */}
-
-      <AssetFilters
-        search={search}
-        setSearch={setSearch}
-        status={status}
-        setStatus={setStatus}
-        category={category}
-        setCategory={setCategory}
-        onAdd={() => setOpen(true)}
-      />
+      {
+  isAdmin && (
+    <AssetFilters
+      search={search}
+      setSearch={setSearch}
+      status={status}
+      setStatus={setStatus}
+      category={category}
+      setCategory={setCategory}
+      onAdd={() => setOpen(true)}
+    />
+  )
+}
 
       {/* TABLE */}
 
-      <AssetTable
-        assets={filteredAssets}
-        refresh={loadAssets}
-      />
+     <AssetTable
+  assets={filteredAssets}
+  refresh={loadAssets}
+  isAdmin={isAdmin}
+/>
 
       {/* MODAL */}
 
-      {open && (
-        <AddAssetModal
-          close={() => setOpen(false)}
-          refresh={loadAssets}
-        />
-      )}
+      {
+  isAdmin &&
+  open && (
+    <AddAssetModal
+      close={() => setOpen(false)}
+      refresh={loadAssets}
+    />
+  )
+}
     </>
   );
 };

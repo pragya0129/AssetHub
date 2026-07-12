@@ -13,13 +13,50 @@ import { useAuth } from "../../context/AuthContext";
 const Sidebar = () => {
   const { user, logout } = useAuth();
 
-  const menus = [
-    { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-    { title: "Assets", path: "/assets", icon: Laptop },
-    { title: "Allocations", path: "/allocations", icon: ClipboardList },
-    { title: "My Assets", path: "/my-assets", icon: Boxes },
-    { title: "Maintenance", path: "/maintenance", icon: Wrench },
-  ];
+const isAdmin =
+  user?.role === "ADMIN" ||
+  user?.role === "ASSET_MANAGER";
+
+const menus = isAdmin
+  ? [
+      {
+        title: "Dashboard",
+        path: "/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        title: "Assets",
+        path: "/assets",
+        icon: Laptop,
+      },
+      {
+        title: "Allocations",
+        path: "/allocations",
+        icon: ClipboardList,
+      },
+      {
+        title: "Maintenance",
+        path: "/maintenance",
+        icon: Wrench,
+      },
+    ]
+  : [
+      {
+        title: "Dashboard",
+        path: "/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        title: "My Assets",
+        path: "/my-assets",
+        icon: Boxes,
+      },
+      {
+        title: "Maintenance",
+        path: "/maintenance",
+        icon: Wrench,
+      },
+    ];
 
   return (
     <aside className="w-72 bg-slate-950 text-slate-200 flex flex-col h-screen border-r border-slate-900">

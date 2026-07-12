@@ -6,6 +6,7 @@ import QuickActions from "../components/dashboard/QuickAction";
 import AssetStatusChart from "../components/dashboard/AssetStatusChart";
 import RecentAssets from "../components/dashboard/RecentAssets";
 import RecentActivity from "../components/dashboard/RecentActivity";
+import { useAuth } from "../context/AuthContext";
 
 interface DashboardData {
   kpis: {
@@ -25,6 +26,12 @@ const Dashboard = () => {
 
   const [loading, setLoading] =
     useState(true);
+  
+    const { user } = useAuth();
+
+const isAdmin =
+  user?.role === "ADMIN" ||
+  user?.role === "ASSET_MANAGER";
 
   const loadDashboard = async () => {
     try {
@@ -94,7 +101,7 @@ const Dashboard = () => {
 
         </div>
 
-        <QuickActions />
+       <QuickActions />
 
       </div>
 
